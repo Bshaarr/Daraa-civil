@@ -1,6 +1,6 @@
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { TooltipProvider } from "./src/components/ui/tooltip";
+import { Toaster } from "./src/components/ui/toaster";
+import ErrorBoundary from "./src/components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 
