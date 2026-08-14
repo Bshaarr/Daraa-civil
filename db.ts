@@ -1,0 +1,26 @@
+import { and, desc, eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/mysql2";
+import { InsertUser, users, employees, leaveRequests, attendance, announcements, knowledgeEntries, notifications } from "../drizzle/schema";
+import { ENV } from './_core/env';
+
+let _db: ReturnType<typeof drizzle> | null = null;
+export async function getDb() { if (!_db && process.env.DATABASE_URL) { try { _db = drizzle(process.env.DATABASE_URL); } catch (error) { console.warn("[Database] Failed to connect:", error); _db = null; } } return _db; }
+export async function upsertUser(user: InsertUser): Promise<void> { if (!user.openId) throw new Error("User openId is required for upsert"); const db=await getDb(); if(!db)return; const values:InsertUser={openId:user.openId}; const updateSet:Record<string,unknown>={}; for(const field of ["name","email","loginMethod"] as const){if(user[field]!==undefined){values[field]=user[field]??null;updateSet[field]=user[field]??null;}} if(user.lastSignedIn){values.lastSignedIn=user.lastSignedIn;updateSet.lastSignedIn=user.lastSignedIn;} if(user.role){values.role=user.role;updateSet.role=user.role;} else if(user.openId===ENV.ownerOpenId){values.role="admin";updateSet.role="admin";} if(!values.lastSignedIn)values.lastSignedIn=new Date(); if(!Object.keys(updateSet).length)updateSet.lastSignedIn=new Date(); await db.insert(users).values(values).onDuplicateKeyUpdate({set:updateSet}); }
+export async function getUserByOpenId(openId:string){const db=await getDb();if(!db)return undefined;const result=await db.select().from(users).where(eq(users.openId,openId)).limit(1);return result[0];}
+export async function listEmployees(){const db=await getDb();return db?db.select().from(employees).orderBy(desc(employees.createdAt)):[];}
+export async function findEmployeeForLogin(fullName:string, employeeNumber:string, nationalId:string){const db=await getDb();if(!db)return undefined;const result=await db.select().from(employees).where(and(eq(employees.fullName,fullName),eq(employees.employeeNumber,employeeNumber),eq(employees.nationalId,nationalId),eq(employees.status,"active"))).limit(1);return result[0];}
+export async function createEmployee(data:typeof employees.$inferInsert){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return (await db.insert(employees).values(data))[0];}
+export async function updateEmployee(id:number,data:Partial<typeof employees.$inferInsert>){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.update(employees).set(data).where(eq(employees.id,id));}
+export async function deleteEmployee(id:number){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.delete(employees).where(eq(employees.id,id));}
+export async function listLeaves(){const db=await getDb();return db?db.select().from(leaveRequests).orderBy(desc(leaveRequests.createdAt)):[];}
+export async function createLeave(data:typeof leaveRequests.$inferInsert){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.insert(leaveRequests).values(data);}
+export async function decideLeave(id:number,status:"approved"|"rejected",managerNote?:string){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.update(leaveRequests).set({status,managerNote:managerNote||null,decidedAt:new Date()}).where(eq(leaveRequests.id,id));}
+export async function listAttendance(){const db=await getDb();return db?db.select().from(attendance).orderBy(desc(attendance.workDate)):[];}
+export async function listAnnouncements(){const db=await getDb();return db?db.select().from(announcements).orderBy(desc(announcements.publishedAt)):[];}
+export async function createAnnouncement(data:typeof announcements.$inferInsert){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.insert(announcements).values(data);}
+export async function listKnowledge(){const db=await getDb();return db?db.select().from(knowledgeEntries).orderBy(desc(knowledgeEntries.createdAt)):[];}
+export async function createKnowledge(data:typeof knowledgeEntries.$inferInsert){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.insert(knowledgeEntries).values(data);}
+export async function listNotifications(employeeId:number){const db=await getDb();return db?db.select().from(notifications).where(eq(notifications.employeeId,employeeId)).orderBy(desc(notifications.createdAt)):[];}
+export async function createNotification(data:typeof notifications.$inferInsert){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.insert(notifications).values(data);}
+export async function markNotificationRead(id:number,employeeId:number){const db=await getDb();if(!db)throw new Error("قاعدة البيانات غير متاحة");return db.update(notifications).set({isRead:1}).where(and(eq(notifications.id,id),eq(notifications.employeeId,employeeId)));}
+export async function countUnreadNotifications(employeeId:number){const db=await getDb();if(!db)return 0;const rows=await db.select({id:notifications.id}).from(notifications).where(and(eq(notifications.employeeId,employeeId),eq(notifications.isRead,0)));return rows.length;}
