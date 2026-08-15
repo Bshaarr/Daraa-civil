@@ -4,5 +4,13 @@ import App from "./App";
 import "./index.css";
 
 const root = document.getElementById("root");
-if (!root) throw new Error("لم يتم العثور على عنصر root");
-createRoot(root).render(<StrictMode><App /></StrictMode>);
+
+if (!root) {
+  throw new Error("لم يتم العثور على عنصر root في الصفحة.");
+}
+
+createRoot(root).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

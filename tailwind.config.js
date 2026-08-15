@@ -1,5 +1,11 @@
 export default {
-  content: ["./index.html", "./main.tsx", "./App.tsx", "./Home.tsx", "./components/**/*.{ts,tsx}", "./contexts/**/*.{ts,tsx}", "./pages/**/*.{ts,tsx}"],
+  content: [
+    "./index.html",
+    "./*.{js,ts,tsx}",
+    "./components/**/*.{js,ts,tsx}",
+    "./contexts/**/*.{js,ts,tsx}",
+    "./pages/**/*.{js,ts,tsx}",
+  ],
   theme: { extend: {} },
   plugins: [],
 };

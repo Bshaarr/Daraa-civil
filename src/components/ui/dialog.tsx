@@ -1,7 +1,0 @@
-import * as React from "react";
-const DialogContext = React.createContext<{ close: () => void }>({ close: () => undefined });
-export function Dialog({ open, onOpenChange, children }: { open?: boolean; onOpenChange?: (open: boolean) => void; children: React.ReactNode }) { return <DialogContext.Provider value={{ close: () => onOpenChange?.(false) }}>{children}</DialogContext.Provider>; }
-export function DialogTrigger({ asChild, children }: { asChild?: boolean; children: React.ReactElement }) { const context = React.useContext(DialogContext); return React.cloneElement(children, { onClick: (event: React.MouseEvent) => { children.props.onClick?.(event); context.close(); } }); }
-export function DialogContent({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) { const context = React.useContext(DialogContext); return <div role="dialog" className={`fixed inset-x-4 top-1/2 z-50 mx-auto max-w-lg -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl ${className}`} {...props}>{children}<button aria-label="إغلاق" className="absolute left-4 top-3 text-slate-500" onClick={context.close}>×</button></div>; }
-export const DialogHeader = ({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) => <div className={`mb-4 ${className}`} {...props} />;
-export const DialogTitle = ({ className = "", ...props }: React.HTMLAttributes<HTMLHeadingElement>) => <h2 className={`text-lg font-bold ${className}`} {...props} />;
